@@ -280,8 +280,7 @@ const SAMPLE_SELECT = `
   LEFT JOIN stage_records pr ON pr.sample_id = s.id AND pr.stage = 'pr'
   LEFT JOIN stage_records po ON po.sample_id = s.id AND po.stage = 'po'`;
 
-app.get("/samples", async (c) => {
-  const q = c.req.query();
+function sampleFilter(q: Record<string, string>) {
   const where: string[] = [];
   const vals: unknown[] = [];
   if (q.status && ["active", "rejected", "completed"].includes(q.status)) {
@@ -311,9 +310,52 @@ app.get("/samples", async (c) => {
     where.push("s.created_at < date(?, '+1 day')");
     vals.push(q.to);
   }
-  const sql = `${SAMPLE_SELECT} ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY s.updated_at DESC LIMIT 1000`;
-  const { results } = await c.env.DB.prepare(sql).bind(...vals).all();
+  return { sql: where.length ? "WHERE " + where.join(" AND ") : "", vals };
+}
+
+app.get("/samples", async (c) => {
+  const f = sampleFilter(c.req.query());
+  const { results } = await c.env.DB.prepare(`${SAMPLE_SELECT} ${f.sql} ORDER BY s.updated_at DESC LIMIT 1000`)
+    .bind(...f.vals)
+    .all();
   return c.json({ samples: results });
+});
+
+/** Everything the Excel report needs: filtered samples with every stage's data, plus their activity. */
+app.get("/export", async (c) => {
+  const db = c.env.DB;
+  const f = sampleFilter(c.req.query());
+  const { results: samples } = await db
+    .prepare(`${SAMPLE_SELECT} ${f.sql} ORDER BY s.created_at DESC LIMIT 2000`)
+    .bind(...f.vals)
+    .all<SampleSummary>();
+  if (!samples.length) return c.json({ samples: [], stages: [], events: [] });
+  // Pull stage records and events for the matched samples in chunks (D1 bind limit is 100).
+  const ids = samples.map((s) => s.id);
+  const stages: unknown[] = [];
+  const events: unknown[] = [];
+  for (let i = 0; i < ids.length; i += 90) {
+    const chunk = ids.slice(i, i + 90);
+    const ph = chunk.map(() => "?").join(",");
+    const [r, e] = await db.batch([
+      db
+        .prepare(
+          `SELECT r.sample_id, r.stage, r.data, r.decision, r.completed_at, u.name AS completed_by_name
+           FROM stage_records r LEFT JOIN users u ON u.id = r.completed_by WHERE r.sample_id IN (${ph})`,
+        )
+        .bind(...chunk),
+      db
+        .prepare(
+          `SELECT e.sample_id, e.type, e.stage, e.message, e.created_at, u.name AS user_name, s.sample_code
+           FROM events e LEFT JOIN users u ON u.id = e.user_id LEFT JOIN samples s ON s.id = e.sample_id
+           WHERE e.sample_id IN (${ph}) AND e.type != 'saved' ORDER BY e.id`,
+        )
+        .bind(...chunk),
+    ]);
+    stages.push(...r.results);
+    events.push(...e.results);
+  }
+  return c.json({ samples, stages, events });
 });
 
 app.get("/queue", async (c) => {

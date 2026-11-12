@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import { Coffee, Download, Plus, Search } from "lucide-react";
-import { STAGES, STAGE_MAP, STATUS_LABELS, canCreateSamples, type SampleSummary, type Supplier } from "../../shared/workflow";
-import { useApi } from "../lib/api";
+import { Coffee, FileSpreadsheet, Plus, Search } from "lucide-react";
+import { toast } from "sonner";
+import { STAGES, STAGE_MAP, STATUS_LABELS, canCreateSamples, type SampleSummary, type StageKey, type Supplier } from "../../shared/workflow";
+import { api, useApi } from "../lib/api";
+import { buildReport, type ExportPayload } from "../lib/report";
 import { useUser } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { Button, Card, EmptyState, ErrorState, Input, PageHeader, Segmented, Select, Skeleton } from "../components/ui";
@@ -11,18 +13,9 @@ import { NewSampleSheet } from "../components/NewSampleSheet";
 
 type StatusFilter = "" | "active" | "completed" | "rejected";
 
-function toCsv(rows: (string | number | null | undefined)[][]) {
-  return rows
-    .map((r) => r.map((v) => {
-      const s = v === null || v === undefined ? "" : String(v);
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    }).join(","))
-    .join("\r\n");
-}
-
 export function SamplesPage() {
   const user = useUser();
-  const { t, l } = useI18n();
+  const { t, l, lang } = useI18n();
   const [params, setParams] = useSearchParams();
   const [open, setOpen] = useState(false);
   const status = (params.get("status") ?? "") as StatusFilter;
@@ -61,29 +54,24 @@ export function SamplesPage() {
   const { data, error, reload } = useApi<{ samples: SampleSummary[] }>(query);
   const sup = useApi<{ suppliers: Supplier[] }>("/suppliers");
 
-  const exportCsv = () => {
-    if (!data) return;
-    const rows = [
-      [t("sampleId"), t("supplier"), t("origin"), t("variety"), t("stage"), t("status"), "PR", "PO", t("created"), t("updated")],
-      ...data.samples.map((s) => [
-        s.sample_code,
-        s.supplier_name,
-        s.origin,
-        s.variety,
-        l(STAGE_MAP[s.status === "rejected" && s.rejected_stage ? s.rejected_stage : s.stage].short),
-        l(STATUS_LABELS[s.status]),
-        s.pr_number,
-        s.po_number,
-        s.created_at.slice(0, 10),
-        s.updated_at.slice(0, 10),
-      ]),
-    ];
-    const blob = new Blob(["﻿" + toCsv(rows)], { type: "text/csv;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `green-beans-samples-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+  const [exporting, setExporting] = useState(false);
+  const exportReport = async () => {
+    setExporting(true);
+    const id = toast.loading(t("preparingReport"));
+    try {
+      const data = await api<ExportPayload>(query.replace("/samples?", "/export?"));
+      const parts: string[] = [];
+      if (status) parts.push(l(STATUS_LABELS[status]));
+      if (stage) parts.push(l(STAGE_MAP[stage as StageKey]?.short));
+      if (supplier) parts.push(sup.data?.suppliers.find((x) => String(x.id) === supplier)?.name ?? "");
+      if (params.get("q")) parts.push(`“${params.get("q")}”`);
+      await buildReport({ data, lang, t: t as never, l, user: user.name, scope: parts.filter(Boolean).join(" · ") || t("scopeAll") });
+      toast.success(t("reportReady"), { id });
+    } catch {
+      toast.error(t("somethingWrong"), { id });
+    } finally {
+      setExporting(false);
+    }
   };
 
   const filtered = !!(status || stage || supplier || params.get("q"));
@@ -94,8 +82,8 @@ export function SamplesPage() {
         title={t("samples")}
         actions={
           <>
-            <Button variant="secondary" icon={<Download className="size-4" />} onClick={exportCsv} disabled={!data?.samples.length}>
-              {t("exportCsv")}
+            <Button variant="secondary" icon={<FileSpreadsheet className="size-4" />} onClick={exportReport} loading={exporting} disabled={!data?.samples.length}>
+              {t("exportReport")}
             </Button>
             {canCreateSamples(user.role) && (
               <Button icon={<Plus className="size-4" />} onClick={() => setOpen(true)}>
