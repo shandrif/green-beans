@@ -13,7 +13,12 @@ export type AppEnv = { Bindings: Env; Variables: { user: User } };
 
 const SESSION_COOKIE = "gb_session";
 const SESSION_DAYS = 30;
-const PBKDF2_ITERATIONS = 100_000;
+// Free-plan Workers get ~10 ms CPU per request. 100k iterations measured ~32 ms,
+// so new hashes use 25k (~8 ms). The iteration count is stored with the salt
+// ("25000:<salt>") so it can be raised later without breaking existing logins.
+// Legacy hashes (plain salt) used 100k and are upgraded on the next sign-in.
+const PBKDF2_ITERATIONS = 25_000;
+const LEGACY_ITERATIONS = 100_000;
 
 const enc = new TextEncoder();
 
@@ -27,15 +32,16 @@ function fromHex(hex: string): Uint8Array {
   return out;
 }
 
-export async function hashPassword(password: string, saltHex?: string): Promise<{ hash: string; salt: string }> {
-  const salt = saltHex ? fromHex(saltHex) : crypto.getRandomValues(new Uint8Array(16));
+async function derive(password: string, salt: Uint8Array, iterations: number): Promise<string> {
   const key = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", hash: "SHA-256", salt, iterations: PBKDF2_ITERATIONS },
-    key,
-    256,
-  );
-  return { hash: toHex(bits), salt: toHex(salt) };
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations }, key, 256);
+  return toHex(bits);
+}
+
+/** Returns the hash and the salt field to store ("<iterations>:<saltHex>"). */
+export async function hashPassword(password: string): Promise<{ hash: string; salt: string }> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  return { hash: await derive(password, salt, PBKDF2_ITERATIONS), salt: `${PBKDF2_ITERATIONS}:${toHex(salt)}` };
 }
 
 function timingSafeEqualHex(a: string, b: string): boolean {
@@ -45,9 +51,12 @@ function timingSafeEqualHex(a: string, b: string): boolean {
   return diff === 0;
 }
 
-export async function verifyPassword(password: string, hash: string, salt: string): Promise<boolean> {
-  const { hash: candidate } = await hashPassword(password, salt);
-  return timingSafeEqualHex(candidate, hash);
+/** Checks a password. `upgrade` is true when the stored hash uses an old iteration count. */
+export async function verifyPassword(password: string, hash: string, saltField: string): Promise<{ ok: boolean; upgrade: boolean }> {
+  const [iterStr, saltHex] = saltField.includes(":") ? saltField.split(":") : [String(LEGACY_ITERATIONS), saltField];
+  const iterations = Number(iterStr) || LEGACY_ITERATIONS;
+  const ok = timingSafeEqualHex(await derive(password, fromHex(saltHex), iterations), hash);
+  return { ok, upgrade: ok && iterations !== PBKDF2_ITERATIONS };
 }
 
 async function sha256(value: string): Promise<string> {

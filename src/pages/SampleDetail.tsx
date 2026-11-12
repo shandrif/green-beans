@@ -14,7 +14,8 @@ import {
   type StageDef,
   type StageKey,
 } from "../../shared/workflow";
-import { api, useApi } from "../lib/api";
+import { api, useApi, type ApiError } from "../lib/api";
+import { compressImage } from "../lib/compress";
 import { useUser } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { fmtBytes, fmtDate, fmtDateTime } from "../lib/format";
@@ -24,7 +25,7 @@ import { StageForm, StageSummary } from "../components/StageForm";
 import { EventLine } from "../components/EventLine";
 import { NewSampleSheet } from "../components/NewSampleSheet";
 
-const MAX_FILE = 15 * 1024 * 1024;
+const MAX_FILE = 10 * 1024 * 1024;
 
 function Files({ sampleId, stage, files, canUpload, onChange }: { sampleId: number; stage: StageKey; files: Attachment[]; canUpload: boolean; onChange: () => void }) {
   const { t, lang } = useI18n();
@@ -38,7 +39,8 @@ function Files({ sampleId, stage, files, canUpload, onChange }: { sampleId: numb
     if (!list.length) return;
     setUploading(true);
     try {
-      for (const file of list) {
+      for (const original of list) {
+        const file = await compressImage(original);
         if (file.size > MAX_FILE) {
           toast.error(t("fileTooLarge"), { description: file.name });
           continue;
@@ -50,8 +52,8 @@ function Files({ sampleId, stage, files, canUpload, onChange }: { sampleId: numb
       }
       toast.success(t("uploaded"));
       onChange();
-    } catch {
-      toast.error(t("somethingWrong"));
+    } catch (err) {
+      toast.error((err as ApiError).code === "storage_full" ? t("storageFull") : t("somethingWrong"));
     } finally {
       setUploading(false);
     }

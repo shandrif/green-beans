@@ -7,6 +7,68 @@ import { useUser } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { Badge, Button, Card, ErrorState, Field, Input, PageHeader, Segmented, Select, Sheet, Skeleton, cx } from "../components/ui";
 import { EventLine } from "../components/EventLine";
+import { fmtBytes } from "../lib/format";
+
+interface Usage {
+  db: { bytes: number | null; limit: number };
+  files: { n: number; bytes: number; limit: number; cap: number };
+  counts: { samples: number; suppliers: number; users: number; events: number };
+}
+
+function Meter({ label, used, limit, detail }: { label: string; used: number; limit: number; detail?: string }) {
+  const pct = Math.min(100, (used / limit) * 100);
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-sm font-medium text-ink-2">{label}</p>
+        <p className="text-sm tabular text-muted">
+          <span className="font-semibold text-ink">{fmtBytes(used)}</span> / {fmtBytes(limit)}
+        </p>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-sand-2">
+        <div
+          className={cx("h-full rounded-full transition-[width] duration-700 ease-out", pct > 80 ? "bg-danger" : pct > 60 ? "bg-tan" : "bg-deep")}
+          style={{ width: `${Math.max(pct, 0.5)}%` }}
+        />
+      </div>
+      <p className="mt-1.5 text-xs text-muted tabular">
+        {pct < 0.1 ? "< 0.1" : pct.toFixed(1)}%{detail ? ` · ${detail}` : ""}
+      </p>
+    </div>
+  );
+}
+
+function UsagePanel() {
+  const { t } = useI18n();
+  const { data, error, reload } = useApi<Usage>("/usage");
+  if (error) return <ErrorState onRetry={reload} />;
+  return (
+    <Card className="p-5">
+      <p className="text-[15px] font-semibold">{t("usage")}</p>
+      <p className="mt-0.5 text-[13px] text-muted">{t("usageSub")}</p>
+      {!data ? (
+        <Skeleton className="mt-5 h-24" />
+      ) : (
+        <div className="mt-5 grid gap-6 md:grid-cols-2">
+          <Meter label={t("databaseSize")} used={data.db.bytes ?? 0} limit={data.db.limit} />
+          <Meter label={t("fileStorage")} used={data.files.bytes} limit={data.files.limit} detail={t("filesCount", { n: data.files.n })} />
+          <div className="grid grid-cols-3 gap-3 md:col-span-2">
+            {[
+              [t("samples"), data.counts.samples],
+              [t("suppliers"), data.counts.suppliers],
+              [t("activeUsers"), data.counts.users],
+            ].map(([k, v]) => (
+              <div key={k} className="rounded-xl bg-sand/60 px-4 py-3">
+                <p className="text-xs text-muted">{k}</p>
+                <p className="text-xl font-bold tabular">{v}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
 
 function UserSheet({ open, onOpenChange, user, onSaved }: { open: boolean; onOpenChange: (o: boolean) => void; user?: User; onSaved: () => void }) {
   const { t, l } = useI18n();
@@ -211,7 +273,7 @@ function Audit() {
 
 export function AdminPage() {
   const { t } = useI18n();
-  const [tab, setTab] = useState<"users" | "audit">("users");
+  const [tab, setTab] = useState<"users" | "audit" | "usage">("users");
   return (
     <div className="animate-fade-up">
       <PageHeader
@@ -223,11 +285,12 @@ export function AdminPage() {
             options={[
               { value: "users", label: t("users") },
               { value: "audit", label: t("auditLog") },
+              { value: "usage", label: t("usage") },
             ]}
           />
         }
       />
-      {tab === "users" ? <Users /> : <Audit />}
+      {tab === "users" ? <Users /> : tab === "audit" ? <Audit /> : <UsagePanel />}
     </div>
   );
 }

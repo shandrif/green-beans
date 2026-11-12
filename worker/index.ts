@@ -32,7 +32,11 @@ import {
 
 const app = new Hono<AppEnv>().basePath("/api");
 
-const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+// Free R2 includes 10 GB. Stop accepting uploads at 9 GB so we never cross it.
+const FILE_STORAGE_CAP = 9 * 1024 ** 3;
+// Free D1 allows 500 MB per database.
+const DB_SIZE_LIMIT = 500 * 1024 ** 2;
 
 app.use("*", csrfGuard);
 
@@ -89,13 +93,15 @@ app.post("/auth/login", async (c) => {
   if (!email || !password) return c.json({ error: "invalid_credentials" }, 401);
   if (await tooManyAttempts(c.env.DB, email)) return c.json({ error: "too_many_attempts" }, 429);
   const row = await c.env.DB.prepare("SELECT * FROM users WHERE email = ? AND active = 1").bind(email).first();
-  const ok = row && (await verifyPassword(password, row.password_hash as string, row.password_salt as string));
-  if (!row || !ok) {
+  const check = row ? await verifyPassword(password, row.password_hash as string, row.password_salt as string) : null;
+  if (!row || !check?.ok) {
     await logEvent(c.env.DB, { type: "login_failed", message: email }).run();
     return c.json({ error: "invalid_credentials" }, 401);
   }
-  // Housekeeping: clear expired sessions for this user.
-  await c.env.DB.prepare("DELETE FROM sessions WHERE user_id = ? AND expires_at < ?").bind(row.id, now()).run();
+  if (check.upgrade) {
+    const { hash, salt } = await hashPassword(password);
+    await c.env.DB.prepare("UPDATE users SET password_hash = ?, password_salt = ? WHERE id = ?").bind(hash, salt, row.id).run();
+  }
   await createSession(c, row.id as number);
   return c.json({ user: rowToUser(row) });
 });
@@ -129,7 +135,7 @@ app.post("/auth/password", async (c) => {
   const next = typeof body.next === "string" ? body.next : "";
   if (next.length < 8) return c.json({ error: "weak_password" }, 400);
   const row = await c.env.DB.prepare("SELECT password_hash, password_salt FROM users WHERE id = ?").bind(user.id).first();
-  if (!row || !(await verifyPassword(current, row.password_hash as string, row.password_salt as string)))
+  if (!row || !(await verifyPassword(current, row.password_hash as string, row.password_salt as string)).ok)
     return c.json({ error: "invalid_credentials" }, 400);
   const { hash, salt } = await hashPassword(next);
   await c.env.DB.prepare("UPDATE users SET password_hash = ?, password_salt = ?, must_change_password = 0 WHERE id = ?")
@@ -461,7 +467,6 @@ app.put("/samples/:id/stages/:stage", async (c) => {
         id,
       ),
     );
-  stmts.push(await logEvent(c.env.DB, { sampleId: id, userId: user.id, type: "saved", stage }));
   await c.env.DB.batch(stmts);
   return c.json({ ok: true });
 });
@@ -553,6 +558,8 @@ app.post("/samples/:id/attachments", async (c) => {
   if (!isStageKey(stage) || !canActOn(user.role, stage)) return c.json({ error: "forbidden" }, 403);
   if (!(file instanceof File)) return c.json({ error: "invalid" }, 400);
   if (file.size > MAX_UPLOAD_BYTES) return c.json({ error: "file_too_large" }, 413);
+  const used = await c.env.DB.prepare("SELECT COALESCE(SUM(size), 0) AS b FROM attachments").first<{ b: number }>();
+  if ((used?.b ?? 0) + file.size > FILE_STORAGE_CAP) return c.json({ error: "storage_full" }, 507);
   const safeName = file.name.replace(/[^\w.\- ؀-ۿ]/g, "_").slice(0, 150) || "file";
   const key = `samples/${id}/${stage}/${crypto.randomUUID()}-${safeName}`;
   await c.env.FILES.put(key, file.stream(), { httpMetadata: { contentType: file.type || "application/octet-stream" } });
@@ -654,6 +661,22 @@ app.get("/dashboard", async (c) => {
   return c.json(out);
 });
 
+app.get("/usage", requireRole("admin"), async (c) => {
+  const db = c.env.DB;
+  const [counts, files] = await db.batch([
+    db.prepare(
+      `SELECT (SELECT COUNT(*) FROM samples) AS samples, (SELECT COUNT(*) FROM suppliers) AS suppliers,
+              (SELECT COUNT(*) FROM users WHERE active = 1) AS users, (SELECT COUNT(*) FROM events) AS events`,
+    ),
+    db.prepare("SELECT COUNT(*) AS n, COALESCE(SUM(size), 0) AS bytes FROM attachments"),
+  ]);
+  return c.json({
+    db: { bytes: counts.meta.size_after ?? null, limit: DB_SIZE_LIMIT },
+    files: { ...(files.results[0] as { n: number; bytes: number }), limit: 10 * 1024 ** 3, cap: FILE_STORAGE_CAP },
+    counts: counts.results[0],
+  });
+});
+
 app.get("/events", requireRole("admin"), async (c) => {
   const before = Number(c.req.query("before")) || Number.MAX_SAFE_INTEGER;
   const { results } = await c.env.DB.prepare(
@@ -673,5 +696,14 @@ export default {
     const url = new URL(req.url);
     if (url.pathname.startsWith("/api/")) return app.fetch(req, env, ctx);
     return new Response(null, { status: 404 });
+  },
+  /** Nightly housekeeping keeps the database small. */
+  scheduled: async (_event: ScheduledController, env: AppEnv["Bindings"]) => {
+    const t = now();
+    const monthAgo = new Date(Date.now() - 30 * 86_400_000).toISOString();
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM sessions WHERE expires_at < ?").bind(t),
+      env.DB.prepare("DELETE FROM events WHERE type IN ('login_failed', 'saved') AND created_at < ?").bind(monthAgo),
+    ]);
   },
 } satisfies ExportedHandler<AppEnv["Bindings"]>;
