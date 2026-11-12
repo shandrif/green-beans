@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Green Beans · Department Responsibilities</title>
+<style>
+  @font-face { font-family: "InterV"; src: url("../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+  @page { size: A4; margin: 0; }
+  :root { --sand:#F5EDE3; --sand2:#EFE4D6; --paper:#FFFCF8; --ink:#1D1B17; --ink2:#4A453D; --muted:#7A7266; --line:#E4D8C8; --tan:#D4B38B; --tansoft:#EFE0CC; --tantext:#7A5A32; --teal:#84C6B2; --tealsoft:#DCEFE8; --deep:#2B8A74; --danger:#C2564A; --dangersoft:#F6E1DD; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: "Frutiger LT Arabic", "InterV", Arial, sans-serif; color: var(--ink); font-size: 9.6pt; line-height: 1.45; background: var(--sand); }
+  .page { width: 210mm; height: 297mm; position: relative; overflow: hidden; background: var(--sand); padding: 0 14mm; page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  /* header */
+  .hero { margin: 0 -14mm; padding: 11mm 14mm 9mm; background: var(--ink); color: var(--sand); position: relative; overflow: hidden; }
+  .hero .c1 { position: absolute; right: -28mm; top: -34mm; width: 92mm; height: 92mm; border-radius: 50%; background: var(--teal); }
+  .hero .c2 { position: absolute; right: 52mm; top: 26mm; width: 14mm; height: 14mm; border-radius: 50%; border: 1.6pt solid var(--tan); }
+  .brand { display: flex; align-items: center; gap: 4mm; position: relative; }
+  .logo { width: 13mm; height: 13mm; }
+  .eyebrow { font-size: 8pt; letter-spacing: .14em; text-transform: uppercase; color: var(--teal); font-weight: 700; }
+  h1 { font-size: 23pt; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin-top: 1mm; }
+  .hero p { margin-top: 3mm; color: #C9BFB2; font-size: 10pt; max-width: 120mm; position: relative; }
+  .marker { height: 1.6mm; margin: 0 -14mm; background: var(--tan); }
+  .meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 8pt; margin: 3.5mm 0 1mm; }
+  h2 { font-size: 13pt; font-weight: 800; letter-spacing: -.01em; margin: 5mm 0 2.6mm; display: flex; align-items: center; gap: 2.5mm; }
+  h2 .n { display: inline-grid; place-items: center; width: 7mm; height: 7mm; border-radius: 50%; background: var(--tan); font-size: 9.5pt; }
+  /* department cards */
+  .depts { display: grid; grid-template-columns: 1fr 1fr; gap: 3.2mm; }
+  .card { background: var(--paper); border: .6pt solid var(--line); border-radius: 3.5mm; padding: 3.6mm 4mm; break-inside: avoid; }
+  .card .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2mm; }
+  .card h3 { font-size: 11pt; font-weight: 800; }
+  .chip { display: inline-block; padding: .6mm 2.6mm; border-radius: 10mm; font-size: 7.4pt; font-weight: 700; }
+  .procurement { background: var(--tansoft); color: var(--tantext); } .roasting { background: var(--ink); color: var(--sand); } .npd { background: var(--tealsoft); color: var(--deep); } .warehouse { background: var(--sand2); color: var(--ink2); } .oracle { background: var(--deep); color: #fff; }
+  .lbl { font-size: 7pt; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: var(--muted); margin: 2mm 0 .8mm; }
+  ol, ul { padding-left: 4.2mm; } li { margin: .5mm 0; }
+  .rec { font-size: 8.4pt; color: var(--ink2); }
+  .out { margin-top: 2mm; padding: 2mm 2.6mm; border-radius: 2.4mm; background: var(--sand); font-size: 8.6pt; }
+  .out b { color: var(--deep); }
+  /* flow table */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--paper); border: .6pt solid var(--line); border-radius: 3.5mm; overflow: hidden; }
+  th { text-align: left; font-size: 7.4pt; text-transform: uppercase; letter-spacing: .08em; color: var(--ink2); background: var(--sand2); padding: 2.2mm 3mm; border-bottom: 1pt solid var(--tan); }
+  td { padding: 1.6mm 3mm; border-bottom: .5pt solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  tr:nth-child(even) td { background: #FBF6EF; }
+  td.step { width: 10mm; font-weight: 800; color: var(--muted); text-align: center; }
+  td.owner { width: 50mm; white-space: nowrap; }
+  td.app { width: 33mm; font-size: 7.8pt; color: var(--muted); white-space: nowrap; }
+  .arrow { color: var(--muted); margin: 0 1mm; }
+  /* rules */
+  .rules { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2.4mm; }
+  .rule { font-size: 8.6pt; }
+  .rule { background: var(--paper); border: .6pt solid var(--line); border-left: 1.4mm solid var(--tan); border-radius: 2.6mm; padding: 2.6mm 3.2mm; break-inside: avoid; }
+  .rule b { display: block; font-size: 9.4pt; margin-bottom: .6mm; }
+  .rule.teal { border-left-color: var(--deep); } .rule.red { border-left-color: var(--danger); }
+  /* sla + roles */
+  .two { display: grid; grid-template-columns: 1.1fr 1fr; gap: 3.2mm; }
+  .two td, .two th { padding: 2.2mm 3mm; } .two .chip { font-size: 7pt; }
+  .sla td.d { text-align: right; font-weight: 800; }
+  .note { margin-top: 3.5mm; padding: 3.2mm 4mm; border-radius: 3mm; background: var(--tealsoft); color: var(--ink); font-size: 8.8pt; border: .6pt solid #BFE0D5; }
+  .note b { color: var(--deep); }
+  .foot { position: absolute; left: 14mm; right: 14mm; bottom: 8mm; display: flex; justify-content: space-between; align-items: center; font-size: 7.6pt; color: var(--muted); border-top: .6pt solid var(--line); padding-top: 2.4mm; }
+  .foot .m { display: flex; align-items: center; gap: 2mm; }
+  .foot svg { width: 5mm; height: 5mm; }
+</style>
+</head>
+<body>
+<!-- ============================== PAGE 1 -->
+<section class="page">
+  <div class="hero">
+    <div class="c1"></div><div class="c2"></div>
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#F5EDE3"/><text x="32" y="42" text-anchor="middle" font-family="InterV, Arial" font-weight="800" font-size="26" fill="#1D1B17">½M</text><circle cx="49" cy="15" r="5" fill="#2B8A74"/></svg>
+      <div>
+        <div class="eyebrow">Green Beans · Sample to PO</div>
+        <h1>Department responsibilities<br/>&amp; process handover</h1>
+      </div>
+    </div>
+    <p>How every green bean sample moves from Procurement to the Purchase Order, who owns each step, and what each team records in the Green Beans app.</p>
+  </div>
+  <div class="marker"></div>
+  <div class="meta"><span>Half Million Coffee · Internal process document</span><span>App: beans.hmreport.com</span></div>
+
+  <h2><span class="n">1</span>Department responsibilities</h2>
+  <div class="depts">
+    <div class="card">
+      <div class="top"><h3>Procurement</h3><span class="chip procurement">Steps 1, 5, 6, 8</span></div>
+      <ol>
+        <li>Receives or sources the green bean sample from the supplier.</li>
+        <li>Registers the sample using its <b>existing sample ID</b> and sends it to Roasting.</li>
+        <li>After <b>Roasting and NPD approvals</b>, negotiates and confirms the supplier.</li>
+        <li>Asks Warehouse to create the PR.</li>
+        <li>Creates the PO <b>in Oracle</b> using the confirmed terms and the PR, then records it in the app.</li>
+      </ol>
+      <div class="lbl">Records in the app</div>
+      <p class="rec">Supplier, origin, variety, process, grade, lot, sample weight, indicative price · agreed price, quantity, Incoterms, payment terms, delivery window · PR request · PO number, date and value.</p>
+      <div class="out"><b>Handover:</b> sample to Roasting · PR request to Warehouse · PO recorded and handed over to Oracle.</div>
+    </div>
+    <div class="card">
+      <div class="top"><h3>Roasting</h3><span class="chip roasting">Steps 2–3</span></div>
+      <ol>
+        <li>Receives the sample from Procurement (it appears in the Roasting queue).</li>
+        <li>Roasts and evaluates it over about <b>2–3 days</b>.</li>
+        <li>Checks the bean meets the company's quality requirements.</li>
+        <li>Records the evaluation and <b>approves or rejects</b> the sample.</li>
+      </ol>
+      <div class="lbl">Records in the app</div>
+      <p class="rec">Received and roast dates, roast profile, Agtron, moisture %, water activity, density, screen size, primary and secondary defects, <b>cupping score</b>, flavour and evaluation notes.</p>
+      <div class="out"><b>Handover:</b> approved → moves to NPD automatically · rejected → closed with a <b>required reason</b> visible to Procurement.</div>
+    </div>
+    <div class="card">
+      <div class="top"><h3>NPD <span style="font-weight:500;color:var(--muted);font-size:9pt">· New Product Development</span></h3><span class="chip npd">Step 4</span></div>
+      <ol>
+        <li>Receives only samples <b>approved by Roasting</b>.</li>
+        <li>Checks the bean fits a product or blend; <b>cupping is optional</b>.</li>
+        <li>Records its decision and comments.</li>
+      </ol>
+      <div class="lbl">Records in the app</div>
+      <p class="rec">Target product or blend, intended use, product fit, cupping done (yes / no), cupping date and score, sensory notes, comments.</p>
+      <div class="out"><b>Handover:</b> approved → Procurement starts negotiation · rejected → closed with a <b>required reason</b>.</div>
+    </div>
+    <div class="card">
+      <div class="top"><h3>Warehouse</h3><span class="chip warehouse">Step 7</span></div>
+      <ol>
+        <li>Receives the PR request from Procurement after approvals and supplier confirmation.</li>
+        <li>Creates the Purchase Requisition (PR) <b>in Oracle</b> for the expected stock.</li>
+        <li>Records the PR reference in the app for Procurement.</li>
+      </ol>
+      <div class="lbl">Records in the app</div>
+      <p class="rec">PR number, PR date, PR quantity (kg), storage location, notes.</p>
+      <div class="out"><b>Handover:</b> PR details sent to Procurement to create the PO.</div>
+    </div>
+  </div>
+
+  <div class="foot"><span class="m"><svg viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#1D1B17"/><text x="32" y="42" text-anchor="middle" font-family="InterV, Arial" font-weight="800" font-size="26" fill="#F5EDE3">½M</text></svg>Green Beans · Department responsibilities</span><span>Page 1 of 3</span></div>
+</section>
+
+<!-- ============================== PAGE 2 -->
+<section class="page" style="padding-top:10mm">
+  <h2 style="margin-top:0"><span class="n">2</span>End-to-end process flow</h2>
+  <table>
+    <thead><tr><th>Step</th><th>Owner</th><th>Action / next handover</th><th>In the app</th></tr></thead>
+    <tbody>
+      <tr><td class="step">1</td><td class="owner"><span class="chip procurement">Procurement</span></td><td>Register the sample and supplier details; submit to Roasting.</td><td class="app">Stage 1 · Registration</td></tr>
+      <tr><td class="step">2</td><td class="owner"><span class="chip roasting">Roasting</span></td><td>Roast and evaluate the sample (about 2–3 days).</td><td class="app">Stage 2 · Roasting</td></tr>
+      <tr><td class="step">3</td><td class="owner"><span class="chip roasting">Roasting</span><span class="arrow">→</span><span class="chip npd">NPD</span></td><td>Approved → NPD. Rejected → closed with reason for Procurement.</td><td class="app">Automatic on decision</td></tr>
+      <tr><td class="step">4</td><td class="owner"><span class="chip npd">NPD</span></td><td>Review the sample (optional cupping); approve or reject.</td><td class="app">Stage 3 · NPD review</td></tr>
+      <tr><td class="step">5</td><td class="owner"><span class="chip procurement">Procurement</span></td><td>After both approvals, negotiate and confirm the supplier.</td><td class="app">Stage 4 · Negotiation</td></tr>
+      <tr><td class="step">6</td><td class="owner"><span class="chip procurement">Procurement</span><span class="arrow">→</span><span class="chip warehouse">Warehouse</span></td><td>Ask Warehouse to create the Purchase Requisition (PR).</td><td class="app">Stage 5 · PR request</td></tr>
+      <tr><td class="step">7</td><td class="owner"><span class="chip warehouse">Warehouse</span></td><td>Create the PR in Oracle; record PR details for Procurement.</td><td class="app">Stage 6 · PR</td></tr>
+      <tr><td class="step">8</td><td class="owner"><span class="chip procurement">Procurement</span></td><td>Create the PO in Oracle from the agreed terms and PR; record it.</td><td class="app">Stage 7 · PO</td></tr>
+      <tr><td class="step">9</td><td class="owner"><span class="chip oracle">Oracle</span></td><td>Marked <b>Handed to Oracle</b>; processing continues in Oracle.</td><td class="app">Status · Handed to Oracle</td></tr>
+    </tbody>
+  </table>
+
+  <h2><span class="n">3</span>Key handover rules</h2>
+  <div class="rules">
+    <div class="rule"><b>Roasting approval before NPD</b>Only samples approved by Roasting reach NPD.</div>
+    <div class="rule"><b>NPD approval before negotiation</b>Procurement negotiates only after both Roasting and NPD approve.</div>
+    <div class="rule"><b>Supplier confirmation before the PR</b>Warehouse is asked for a PR only after the supplier is confirmed.</div>
+    <div class="rule"><b>Each team fills only its own steps</b>Stages open in order; other teams can view but not edit them.</div>
+    <div class="rule teal"><b>PR and PO are created in Oracle</b>Warehouse owns the PR, Procurement owns the PO. The app records their references; there is no automatic Oracle link.</div>
+    <div class="rule red"><b>Rejection and resubmission</b>A rejection needs a reason and closes the sample. Procurement can resubmit a new sample from the same supplier, linked to the original.</div>
+  </div>
+
+  <div class="foot"><span class="m"><svg viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#1D1B17"/><text x="32" y="42" text-anchor="middle" font-family="InterV, Arial" font-weight="800" font-size="26" fill="#F5EDE3">½M</text></svg>Green Beans · Department responsibilities</span><span>Page 2 of 3</span></div>
+</section>
+
+<!-- ============================== PAGE 3 -->
+<section class="page" style="padding-top:10mm">
+  <h2 style="margin-top:0"><span class="n">4</span>Expected times &amp; roles</h2>
+  <div class="two">
+    <table class="sla">
+      <thead><tr><th>Stage</th><th style="text-align:right">Expected</th></tr></thead>
+      <tbody>
+        <tr><td>1 · Registration</td><td class="d">2 days</td></tr>
+        <tr><td>2 · Roasting evaluation</td><td class="d">3 days</td></tr>
+        <tr><td>3 · NPD review</td><td class="d">3 days</td></tr>
+        <tr><td>4 · Negotiation &amp; confirmation</td><td class="d">7 days</td></tr>
+        <tr><td>5 · PR request</td><td class="d">2 days</td></tr>
+        <tr><td>6 · PR (Warehouse)</td><td class="d">3 days</td></tr>
+        <tr><td>7 · PO</td><td class="d">3 days</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th>Role</th><th>Access</th></tr></thead>
+      <tbody>
+        <tr><td><span class="chip procurement">Procurement</span></td><td>Stages 1, 4, 5, 7 · suppliers · resubmissions</td></tr>
+        <tr><td><span class="chip roasting">Roasting</span></td><td>Stage 2</td></tr>
+        <tr><td><span class="chip npd">NPD</span></td><td>Stage 3</td></tr>
+        <tr><td><span class="chip warehouse">Warehouse</span></td><td>Stage 6</td></tr>
+        <tr><td><span class="chip oracle" style="background:var(--ink)">Admin</span></td><td>Any stage · users · audit log · usage</td></tr>
+        <tr><td><span class="chip" style="background:var(--sand2);color:var(--muted)">Viewer</span></td><td>Read-only: dashboard, samples, reports</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="margin-top:2mm;font-size:8.2pt;color:var(--muted)">Samples longer than expected in a stage are flagged <b style="color:var(--danger)">Overdue</b> on the dashboard and in each team's queue.</p>
+
+  <div class="note"><b>How to use the app.</b> Each team works from <b>My queue</b>, which lists the samples waiting for them. Files (certificates, photos, cupping sheets) can be attached to any stage. Everything is logged with who did it and when, and the full record can be exported as a branded Excel report.</div>
+
+  <div class="foot"><span class="m"><svg viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#1D1B17"/><text x="32" y="42" text-anchor="middle" font-family="InterV, Arial" font-weight="800" font-size="26" fill="#F5EDE3">½M</text></svg>Green Beans · Department responsibilities</span><span>Page 3 of 3</span></div>
+</section>
+</body>
+</html>
