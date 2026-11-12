@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sand: #f5ede3;
+  --color-sand-2: #efe4d6;
+  --color-paper: #fffcf8;
+  --color-ink: #1d1b17;
+  --color-ink-2: #4a453d;
+  --color-muted: #7a7266;
+  --color-line: #e4d8c8;
+  --color-tan: #d4b38b;
+  --color-tan-soft: #efe0cc;
+  --color-teal: #84c6b2;
+  --color-teal-soft: #dcefe8;
+  --color-deep: #2b8a74;
+  --color-danger: #c2564a;
+  --color-danger-soft: #f6e1dd;
+
+  --font-sans: "Frutiger LT Arabic", "Inter Variable", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  --shadow-card: 0 1px 0 rgb(29 27 23 / 0.04), 0 1px 3px rgb(29 27 23 / 0.06);
+  --shadow-pop: 0 10px 30px -10px rgb(29 27 23 / 0.25), 0 2px 6px rgb(29 27 23 / 0.08);
+
+  --animate-fade-up: fade-up 220ms var(--ease-out) both;
+  --animate-pop: pop 180ms var(--ease-out) both;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+html[dir="rtl"] {
+  --font-sans: "Frutiger LT Arabic", "IBM Plex Sans Arabic", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  background: var(--color-sand);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--color-sand);
+  min-height: 100dvh;
+}
+
+::selection {
+  background: var(--color-teal);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-deep);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Native date inputs: keep them on brand. */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
