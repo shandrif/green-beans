@@ -53,3 +53,9 @@ npx wrangler secret put SETUP_KEY   # one-time key needed to create the first ad
 Then open the Worker URL, enter the setup key and create the admin account. The admin
 adds users and assigns each one a department; new users must change their temporary
 password on first sign-in.
+
+## Custom domain (beans.hmreport.com)
+
+`hmreport.com` lives in a different Cloudflare account, so the app is reached through a
+tiny forwarder Worker in that account ([`forwarder/worker.js`](forwarder/worker.js)).
+The forwarder has no database or storage; all data stays in this app's D1 and R2.
