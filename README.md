@@ -44,6 +44,13 @@ Open http://localhost:5173 and create the first admin.
 
 ## Deploy
 
+Deploys run automatically: the `green-beans` Worker is connected to this repository with
+Cloudflare Workers Builds (branch `claude/focused-wozniak-mq8gt8`, build `npm run build`,
+deploy `npx wrangler deploy`). Every push to that branch goes live in about two minutes;
+a failed build leaves the previous version running.
+
+Manual deploy, if ever needed:
+
 ```bash
 npm run db:migrate:remote
 npm run deploy
