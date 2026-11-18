@@ -50,6 +50,7 @@ const dict = {
   retry: { en: "Try again", ar: "إعادة المحاولة" },
   required: { en: "Required", ar: "مطلوب" },
   optional: { en: "Optional", ar: "اختياري" },
+  minimum: { en: "Minimum", ar: "الحد الأدنى" },
   back: { en: "Back", ar: "رجوع" },
   notFound: { en: "Not found", ar: "غير موجود" },
   exportCsv: { en: "Export CSV", ar: "تصدير CSV" },

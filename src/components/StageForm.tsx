@@ -183,7 +183,13 @@ export function StageForm({
               label={l(f.label)}
               hint={f.hint ? l(f.hint) : undefined}
               required={f.required}
-              error={invalid.has(f.key) ? t("required") : null}
+              error={
+                !invalid.has(f.key)
+                  ? null
+                  : values[f.key] && f.min !== undefined && Number(values[f.key]) < f.min
+                    ? `${t("minimum")} ${f.min}${f.unit ? ` ${f.unit}` : ""}`
+                    : t("required")
+              }
               className={f.wide ? "sm:col-span-2 lg:col-span-3" : undefined}
             >
               <FieldInput f={f} id={id} value={values[f.key] ?? ""} onChange={(v) => set(f.key, v)} invalid={invalid.has(f.key)} />

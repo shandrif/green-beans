@@ -86,21 +86,21 @@
     <div class="card">
       <div class="top"><h3>Procurement</h3><span class="chip procurement">Steps 1, 5, 6, 8</span></div>
       <ol>
-        <li>Receives or sources the green bean sample from the supplier.</li>
+        <li>Receives or sources the green bean sample from the supplier: <b>minimum 300 g (300–500 g)</b>.</li>
         <li>Registers the sample using its <b>existing sample ID</b> and sends it to Roasting.</li>
         <li>After <b>Roasting and NPD approvals</b>, negotiates and confirms the supplier.</li>
         <li>Asks Warehouse to create the PR.</li>
         <li>Creates the PO <b>in Oracle</b> using the confirmed terms and the PR, then records it in the app.</li>
       </ol>
       <div class="lbl">Records in the app</div>
-      <p class="rec">Supplier, origin, variety, process, grade, lot, sample weight, indicative price · agreed price, quantity, Incoterms, payment terms, delivery window · PR request · PO number, date and value.</p>
+      <p class="rec">Supplier, origin, variety, process, grade, lot, <b>sample weight (min. 300 g)</b>, indicative price · agreed price, quantity, Incoterms, payment terms, delivery window · PR request · PO number, date and value.</p>
       <div class="out"><b>Handover:</b> sample to Roasting · PR request to Warehouse · PO recorded and handed over to Oracle.</div>
     </div>
     <div class="card">
       <div class="top"><h3>Roasting</h3><span class="chip roasting">Steps 2–3</span></div>
       <ol>
         <li>Receives the sample from Procurement (it appears in the Roasting queue).</li>
-        <li>Roasts and evaluates it over about <b>2–3 days</b>.</li>
+        <li>Roasts and evaluates it, including cupping, over about <b>5–7 days</b>.</li>
         <li>Checks the bean meets the company's quality requirements.</li>
         <li>Records the evaluation and <b>approves or rejects</b> the sample.</li>
       </ol>
@@ -141,8 +141,8 @@
   <table>
     <thead><tr><th>Step</th><th>Owner</th><th>Action / next handover</th><th>In the app</th></tr></thead>
     <tbody>
-      <tr><td class="step">1</td><td class="owner"><span class="chip procurement">Procurement</span></td><td>Register the sample and supplier details; submit to Roasting.</td><td class="app">Stage 1 · Registration</td></tr>
-      <tr><td class="step">2</td><td class="owner"><span class="chip roasting">Roasting</span></td><td>Roast and evaluate the sample (about 2–3 days).</td><td class="app">Stage 2 · Roasting</td></tr>
+      <tr><td class="step">1</td><td class="owner"><span class="chip procurement">Procurement</span></td><td>Register the sample (min. 300 g) and supplier details; submit to Roasting.</td><td class="app">Stage 1 · Registration</td></tr>
+      <tr><td class="step">2</td><td class="owner"><span class="chip roasting">Roasting</span></td><td>Roast and evaluate the sample, incl. cupping (5–7 days).</td><td class="app">Stage 2 · Roasting</td></tr>
       <tr><td class="step">3</td><td class="owner"><span class="chip roasting">Roasting</span><span class="arrow">→</span><span class="chip npd">NPD</span></td><td>Approved → NPD. Rejected → closed with reason for Procurement.</td><td class="app">Automatic on decision</td></tr>
       <tr><td class="step">4</td><td class="owner"><span class="chip npd">NPD</span></td><td>Review the sample (optional cupping); approve or reject.</td><td class="app">Stage 3 · NPD review</td></tr>
       <tr><td class="step">5</td><td class="owner"><span class="chip procurement">Procurement</span></td><td>After both approvals, negotiate and confirm the supplier.</td><td class="app">Stage 4 · Negotiation</td></tr>
@@ -174,7 +174,7 @@
       <thead><tr><th>Stage</th><th style="text-align:right">Expected</th></tr></thead>
       <tbody>
         <tr><td>1 · Registration</td><td class="d">2 days</td></tr>
-        <tr><td>2 · Roasting evaluation</td><td class="d">3 days</td></tr>
+        <tr><td>2 · Roasting evaluation</td><td class="d">7 days</td></tr>
         <tr><td>3 · NPD review</td><td class="d">3 days</td></tr>
         <tr><td>4 · Negotiation &amp; confirmation</td><td class="d">7 days</td></tr>
         <tr><td>5 · PR request</td><td class="d">2 days</td></tr>

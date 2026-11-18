@@ -9,7 +9,7 @@ PRs and POs are **created in Oracle**; this app only records their references.
 | # | Stage | Owner | Moves on when |
 |---|---|---|---|
 | 1 | Sample registration | Procurement | Submitted to Roasting |
-| 2 | Roasting evaluation (2–3 days) | Roasting | Approved (rejected → closed with reason) |
+| 2 | Roasting evaluation incl. cupping (5–7 days) | Roasting | Approved (rejected → closed with reason) |
 | 3 | NPD review (cupping optional) | NPD | Approved (rejected → closed with reason) |
 | 4 | Negotiation & supplier confirmation | Procurement | Supplier confirmed |
 | 5 | PR request to Warehouse | Procurement | Request sent |
