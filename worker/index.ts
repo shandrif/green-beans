@@ -257,6 +257,21 @@ app.get("/suppliers/:id", async (c) => {
   return c.json({ supplier, samples: results });
 });
 
+/** Admin only: remove a supplier that has no samples. */
+app.delete("/suppliers/:id", requireRole("admin"), async (c) => {
+  const id = Number(c.req.param("id"));
+  const sp = await c.env.DB.prepare("SELECT name, (SELECT COUNT(*) FROM samples WHERE supplier_id = ?) AS n FROM suppliers WHERE id = ?")
+    .bind(id, id)
+    .first<{ name: string; n: number }>();
+  if (!sp) return c.json({ error: "not_found" }, 404);
+  if (sp.n > 0) return c.json({ error: "has_samples" }, 409);
+  await c.env.DB.batch([
+    c.env.DB.prepare("DELETE FROM suppliers WHERE id = ?").bind(id),
+    logEvent(c.env.DB, { userId: c.get("user").id, type: "supplier_deleted", message: sp.name }),
+  ]);
+  return c.json({ ok: true });
+});
+
 app.patch("/suppliers/:id", requireRole("admin", "procurement"), async (c) => {
   const id = Number(c.req.param("id"));
   const f = supplierFields(await c.req.json().catch(() => ({})));
@@ -584,6 +599,27 @@ app.post("/samples/:id/stages/:stage/complete", async (c) => {
   );
   await c.env.DB.batch(stmts);
   return c.json({ ok: true, next, status: decision === "rejected" ? "rejected" : next ? "active" : "completed" });
+});
+
+/** Admin only: permanently remove a sample (e.g. test data) with its stages, history and files. */
+app.delete("/samples/:id", requireRole("admin"), async (c) => {
+  const db = c.env.DB;
+  const id = Number(c.req.param("id"));
+  const sample = await db.prepare("SELECT id, sample_code FROM samples WHERE id = ?").bind(id).first<{ id: number; sample_code: string }>();
+  if (!sample) return c.json({ error: "not_found" }, 404);
+  const body = await c.req.json().catch(() => ({}));
+  if (str(body.confirm, 60).toLowerCase() !== sample.sample_code.toLowerCase()) return c.json({ error: "confirm_mismatch" }, 400);
+  const { results: files } = await db.prepare("SELECT r2_key FROM attachments WHERE sample_id = ?").bind(id).all<{ r2_key: string }>();
+  if (files.length) await c.env.FILES.delete(files.map((f) => f.r2_key));
+  await db.batch([
+    db.prepare("UPDATE samples SET parent_sample_id = NULL WHERE parent_sample_id = ?").bind(id),
+    db.prepare("DELETE FROM attachments WHERE sample_id = ?").bind(id),
+    db.prepare("DELETE FROM events WHERE sample_id = ?").bind(id),
+    db.prepare("DELETE FROM stage_records WHERE sample_id = ?").bind(id),
+    db.prepare("DELETE FROM samples WHERE id = ?").bind(id),
+    logEvent(db, { userId: c.get("user").id, type: "sample_deleted", message: sample.sample_code }),
+  ]);
+  return c.json({ ok: true });
 });
 
 // ---------------------------------------------------------------- attachments

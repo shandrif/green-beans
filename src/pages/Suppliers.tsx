@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
-import { ArrowLeft, Building2, Mail, Pencil, Phone, Plus, UserRound } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Pencil, Phone, Plus, Trash2, UserRound } from "lucide-react";
 import { canCreateSamples, type SampleSummary, type Supplier } from "../../shared/workflow";
 import { api, useApi } from "../lib/api";
 import { useUser } from "../lib/auth";
@@ -149,6 +149,7 @@ export function SupplierDetailPage() {
   const { data, error, reload } = useApi<{ supplier: Supplier; samples: SampleSummary[] }>(`/suppliers/${id}`);
   const [editing, setEditing] = useState(false);
   const [newSample, setNewSample] = useState(false);
+  const nav = useNavigate();
   const canEdit = canCreateSamples(user.role);
 
   if (error) return <ErrorState onRetry={reload} />;
@@ -204,6 +205,30 @@ export function SupplierDetailPage() {
       )}
       <h2 className="mb-3 text-[15px] font-semibold">{t("sampleHistory")}</h2>
       <Card>{data.samples.length ? <SampleList samples={data.samples} /> : <EmptyState title={t("noSamples")} />}</Card>
+      {user.role === "admin" && data.samples.length === 0 && (
+        <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-danger/25 bg-paper/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold">{t("deleteSupplier")}</p>
+            <p className="text-xs text-muted">{t("deleteSupplierSub")}</p>
+          </div>
+          <Button
+            variant="secondary"
+            icon={<Trash2 className="size-4 text-danger" />}
+            onClick={async () => {
+              if (!window.confirm(`${t("deleteSupplier")}: ${s.name}?`)) return;
+              try {
+                await api(`/suppliers/${s.id}`, { method: "DELETE" });
+                toast.success(t("supplierDeleted"));
+                nav("/suppliers", { replace: true });
+              } catch {
+                toast.error(t("somethingWrong"));
+              }
+            }}
+          >
+            {t("deleteSupplier")}
+          </Button>
+        </div>
+      )}
       <SupplierSheet open={editing} onOpenChange={setEditing} supplier={s} onSaved={reload} />
       <NewSampleSheet open={newSample} onOpenChange={setNewSample} supplierId={s.id} />
     </div>

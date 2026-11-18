@@ -1,5 +1,5 @@
-import { useRef, useState, type ChangeEvent } from "react";
-import { Link, useParams } from "react-router";
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { ArrowLeft, Check, ChevronDown, FileText, Lock, Paperclip, RotateCcw, Trash2, X, Building2, Image as ImageIcon } from "lucide-react";
 import {
@@ -19,7 +19,7 @@ import { compressImage } from "../lib/compress";
 import { useUser } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { fmtBytes, fmtDate, fmtDateTime } from "../lib/format";
-import { Badge, Button, Card, EmptyState, ErrorState, Skeleton, cx } from "../components/ui";
+import { Badge, Button, Card, EmptyState, ErrorState, Field, Input, Sheet, Skeleton, cx } from "../components/ui";
 import { DeptBadge, StatusBadge } from "../components/workflow";
 import { StageForm, StageSummary } from "../components/StageForm";
 import { EventLine } from "../components/EventLine";
@@ -109,6 +109,62 @@ function Files({ sampleId, stage, files, canUpload, onChange }: { sampleId: numb
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function DeleteSample({ id, code }: { id: number; code: string }) {
+  const { t } = useI18n();
+  const nav = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const match = typed.trim().toLowerCase() === code.toLowerCase();
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!match) return;
+    setBusy(true);
+    try {
+      await api(`/samples/${id}`, { method: "DELETE", json: { confirm: typed.trim() } });
+      toast.success(t("sampleDeleted"), { description: code });
+      nav("/samples", { replace: true });
+    } catch {
+      toast.error(t("somethingWrong"));
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="ms-12 mt-8 flex flex-col gap-3 rounded-2xl border border-danger/25 bg-paper/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="text-sm font-semibold text-ink">{t("dangerZone")}</p>
+        <p className="text-xs text-muted">{t("adminOnly")}</p>
+      </div>
+      <Button
+        variant="secondary"
+        icon={<Trash2 className="size-4 text-danger" />}
+        onClick={() => {
+          setTyped("");
+          setOpen(true);
+        }}
+        className="shrink-0"
+      >
+        {t("deleteSample")}
+      </Button>
+      <Sheet open={open} onOpenChange={setOpen} title={`${t("deleteSample")} · ${code}`} description={t("deleteSampleSub")}>
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <Field label={t("typeToConfirm", { code })} htmlFor="confirm-del">
+            <Input id="confirm-del" autoComplete="off" value={typed} onChange={(e) => setTyped(e.target.value)} dir="ltr" />
+          </Field>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button type="submit" variant="danger" loading={busy} disabled={!match}>
+              {t("deleteForever")}
+            </Button>
+          </div>
+        </form>
+      </Sheet>
     </div>
   );
 }
@@ -373,6 +429,7 @@ export function SampleDetailPage() {
             ))}
           </ol>
           <p className="ms-12 text-xs text-muted">{t("oracleNote")}</p>
+          {user.role === "admin" && <DeleteSample id={s.id} code={s.sample_code} />}
         </section>
 
         <aside>
